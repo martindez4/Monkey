@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, serif; background: #fafaf7; color: #1a1a1a; }
+.screen { display: none; padding: 24px; max-width: 460px; margin: 0 auto; }
+.screen.on { display: block; }
+h1 { font-size: 30px; margin-bottom: 4px; }
+.sub { color: #777; font-style: italic; margin-bottom: 24px; }
+.pr-box { background: #111; color: #fff; padding: 20px; border-radius: 6px; margin-bottom: 20px; }
+.pr-box .num { font-size: 48px; font-weight: 700; line-height: 1; }
+.pr-box .lbl { font-family: monospace; font-size: 11px; opacity: 0.6; margin-bottom: 4px; }
+.card { background: #f0eee8; border: 1px solid #ddd; border-radius: 6px; padding: 20px; margin-bottom: 12px; cursor: pointer; }
+.card .type { font-family: monospace; font-size: 10px; color: #888; margin-bottom: 4px; }
+.card .title { font-size: 24px; font-weight: 700; }
+.topbar { display: flex; justify-content: space-between; align-items: center; padding: 12px 0 16px; border-bottom: 1px solid #eee; margin-bottom: 20px; }
+.topbar button { background: none; border: none; font-family: monospace; font-size: 12px; cursor: pointer; color: #333; }
+.ex-num { font-family: monospace; font-size: 10px; color: #888; margin-bottom: 6px; }
+.ex-name { font-size: 28px; font-weight: 700; margin-bottom: 18px; line-height: 1.1; }
+.info-box { padding: 12px 14px; border-radius: 4px; margin-bottom: 10px; }
+.info-box.prev { background: #f0eee8; border-left: 3px solid #999; }
+.info-box.target { border-left: 3px solid #111; }
+.info-box .lbl { font-family: monospace; font-size: 10px; color: #888; margin-bottom: 3px; }
+.info-box .val { font-size: 15px; font-weight: 600; }
+.info-box.target .val { font-style: italic; font-weight: 400; }
+.wt-section { margin: 18px 0; }
+.wt-section .lbl { font-family: monospace; font-size: 10px; color: #888; margin-bottom: 10px; }
+.wt-row { display: flex; align-items: center; justify-content: center; gap: 20px; }
+.wt-btn { width: 50px; height: 50px; border-radius: 50%; border: 1px solid #ccc; background: #fff; font-size: 26px; cursor: pointer; }
+.wt-val { text-align: center; min-width: 80px; }
+.wt-val .big { font-size: 44px; font-weight: 700; line-height: 1; }
+.wt-val .unit { font-family: monospace; font-size: 10px; color: #888; }
+.reps-lbl { font-family: monospace; font-size: 10px; color: #888; margin-bottom: 10px; }
+.reps-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px; }
+.rep-btn { aspect-ratio: 1; border: 1px solid #ccc; background: #fff; font-size: 18px; font-weight: 700; cursor: pointer; border-radius: 4px; font-family: Georgia, serif; }
+.rep-btn:active { background: #111; color: #fff; }
+.sets-log { background: #f0eee8; border-radius: 4px; padding: 12px 14px; margin-bottom: 20px; min-height: 48px; }
+.set-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,0.07); font-family: monospace; font-size: 13px; align-items: center; }
+.set-row:last-child { border-bottom: none; }
+.del-btn { background: none; border: none; color: #bbb; font-size: 16px; cursor: pointer; }
+.empty-note { color: #bbb; font-style: italic; font-size: 13px; text-align: center; padding: 6px 0; }
+.pr-toast { background: #111; color: #fff; padding: 10px 14px; border-radius: 4px; margin-bottom: 12px; font-style: italic; text-align: center; display: none; }
+.bottom-bar { padding-top: 16px; border-top: 1px solid #eee; }
+.main-btn { width: 100%; background: #111; color: #fff; border: none; padding: 14px; font-family: monospace; font-size: 12px; letter-spacing: 0.08em; cursor: pointer; border-radius: 4px; }
+.done-ex { padding: 12px 0; border-bottom: 1px solid #eee; }
+.done-ex .name { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+.done-ex .data { font-family: monospace; font-size: 12px; color: #666; }
+</style>
+</head>
+<body>
+
+<div id="home" class="screen on">
+  <h1>Monkey Log</h1>
+  <p class="sub">Train deliberately, Marty.</p>
+  <div class="pr-box">
+    <div class="lbl">PULL-UP PR</div>
+    <div class="num" id="pr-display">11.5</div>
+    <div style="font-family:monospace;font-size:11px;opacity:0.6;margin-top:4px">reps</div>
+  </div>
+  <div class="card" onclick="startWorkout('upper')">
+    <div class="type">ROUTINE A</div>
+    <div class="title">Upper Body →</div>
+  </div>
+  <div class="card" onclick="startWorkout('lower')">
+    <div class="type">ROUTINE B</div>
+    <div class="title">Lower Body →</div>
+  </div>
+</div>
+
+<div id="workout" class="screen">
+  <div class="topbar">
+    <button onclick="goHome()">← Back</button>
+    <span id="progress" style="font-family:monospace;font-size:12px;color:#888"></span>
+    <button onclick="advance()">Skip</button>
+  </div>
+  <div class="ex-num" id="ex-num"></div>
+  <div class="ex-name" id="ex-name"></div>
+  <div class="info-box prev"><div class="lbl">LAST SESSION</div><div class="val" id="last-val"></div></div>
+  <div class="info-box target"><div class="lbl">TARGET</div><div class="val" id="target-val"></div></div>
+  <div id="wt-section" class="wt-section">
+    <div class="lbl" id="wt-lbl">WEIGHT (lb)</div>
+    <div class="wt-row">
+      <button class="wt-btn" onclick="adjW(-2.5)">−</button>
+      <div class="wt-val"><div class="big" id="wt-display">0</div><div class="unit">lb</div></div>
+      <button class="wt-btn" onclick="adjW(2.5)">+</button>
+    </div>
+  </div>
+  <div class="reps-lbl" id="set-lbl">TAP REPS — SET 1</div>
+  <div class="reps-grid" id="reps-grid"></div>
+  <div id="pr-toast" class="pr-toast"></div>
+  <div class="sets-log" id="sets-log"><div class="empty-note">No sets yet</div></div>
+  <div class="bottom-bar">
+    <button class="main-btn" id="next-btn" onclick="advance()">NEXT EXERCISE →</button>
+  </div>
+</div>
+
+<div id="done" class="screen">
+  <h1 style="margin-bottom:4px">Done!</h1>
+  <p class="sub" id="done-sub"></p>
+  <div id="done-list"></div>
+  <button class="main-btn" style="margin-top:24px" onclick="goHome()">← Home</button>
+</div>
+
+<script>
+var UPPER = [
+  {name:"Pull-ups",w:0,last:[11.5],target:"Reach for 12",bw:true},
+  {name:"Assisted Pull-ups",w:20,last:[9,9,9],target:"20lb assist × 9,9,9",assist:true},
+  {name:"Incline DB Press",w:55,last:[9,9,9],target:"Test 60lb",ps:true},
+  {name:"Weighted Dips",w:20,last:[10,10,8],target:"20lb × 10,10,10"},
+  {name:"Cable Chest Press",w:70,last:[10,10,10],target:"Test 75lb/side",ps:true},
+  {name:"Lat Pulldown",w:130,last:[10,10,10],target:"Test 140lb"},
+  {name:"Cable Shoulder Press",w:75,last:[10,10,10],target:"Test 80lb/side",ps:true}
+];
+var LOWER = [
+  {name:"Pull-ups (Warm-up)",w:0,last:[10],target:"Own 10",bw:true},
+  {name:"Squats",w:80,last:[9,9,9],target:"Test 85lb/side",ps:true},
+  {name:"Atlantis Hinge",w:100,last:[10,10,10],target:"Test 110lb"},
+  {name:"Leg Extension",w:70,last:[9,9,9],target:"70lb × 10,10,10",ps:true},
+  {name:"Leg Curl",w:100,last:[10,10,10],target:"100lb × 10,10,10"},
+  {name:"Walking Lunges",w:40,last:[10,10,10],target:"Test 45lb/hand"},
+  {name:"Calves",w:40,last:[12,12,12],target:"40lb × 15,15,15",ps:true}
+];
+
+var exList=[], ei=0, curW=0, sets=[], allSets={}, pullupPR=11.5;
+
+function fmtLast(ex){
+  var r=ex.last.join(", ");
+  if(ex.bw) return r+" reps";
+  if(ex.assist) return ex.w+"lb assist × "+r;
+  if(ex.ps) return ex.w+"lb/side × "+r;
+  return ex.w+"lb × "+r;
+}
+function fmtSet(ex,s){
+  if(ex.bw) return s.reps+" reps";
+  if(ex.assist) return s.w+"lb assist × "+s.reps;
+  if(ex.ps) return s.w+"lb/side × "+s.reps;
+  return s.w+"lb × "+s.reps;
+}
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});
+  document.getElementById(id).classList.add('on');
+}
+
+function startWorkout(type){
+  exList = (type==='upper'?UPPER:LOWER).map(function(e){return Object.assign({},e,{last:e.last.slice()});});
+  ei=0; allSets={}; sets=[]; curW=exList[0].w;
+  loadExercise();
+  show('workout');
+}
+
+function loadExercise(){
+  var ex=exList[ei];
+  sets=allSets[ei]||[];
+  curW=ex.w;
+  document.getElementById('ex-num').textContent='Exercise '+(ei+1);
+  document.getElementById('ex-name').textContent=ex.name;
+  document.getElementById('progress').textContent=(ei+1)+' / '+exList.length;
+  document.getElementById('last-val').textContent=fmtLast(ex);
+  document.getElementById('target-val').textContent=ex.target;
+  document.getElementById('wt-display').textContent=curW;
+  document.getElementById('wt-section').style.display=ex.bw?'none':'block';
+  var wlbl=ex.ps?'WEIGHT (PER SIDE)':ex.assist?'WEIGHT (ASSIST)':'WEIGHT (lb)';
+  document.getElementById('wt-lbl').textContent=wlbl;
+  buildRepsGrid();
+  renderSets();
+  document.getElementById('pr-toast').style.display='none';
+  var isLast=(ei===exList.length-1);
+  document.getElementById('next-btn').textContent=isLast?'FINISH WORKOUT ✓':'NEXT EXERCISE →';
+}
+
+function buildRepsGrid(){
+  var g=document.getElementById('reps-grid');
+  g.innerHTML='';
+  for(var i=1;i<=15;i++){
+    var b=document.createElement('button');
+    b.className='rep-btn';
+    b.textContent=i;
+    b.onclick=(function(n){return function(){logRep(n);};})(i);
+    g.appendChild(b);
+  }
+}
+
+function adjW(d){
+  curW=Math.max(0,curW+d);
+  document.getElementById('wt-display').textContent=curW;
+}
+
+function logRep(reps){
+  var ex=exList[ei];
+  sets.push({reps:reps,w:curW});
+  allSets[ei]=sets;
+  if(ex.bw && reps>pullupPR){
+    pullupPR=reps;
+    document.getElementById('pr-display').textContent=pullupPR;
+    var t=document.getElementById('pr-toast');
+    t.textContent='🎉 New PR: '+reps+' pull-ups!';
+    t.style.display='block';
+    setTimeout(function(){t.style.display='none';},3000);
+  }
+  renderSets();
+}
+
+function renderSets(){
+  var log=document.getElementById('sets-log');
+  var ex=exList[ei];
+  document.getElementById('set-lbl').textContent='TAP REPS — SET '+(sets.length+1);
+  if(!sets.length){log.innerHTML='<div class="empty-note">No sets yet</div>';return;}
+  log.innerHTML=sets.map(function(s,i){
+    return '<div class="set-row"><span style="color:#888;font-size:10px">Set '+(i+1)+'</span>'
+      +'<span style="font-weight:700">'+fmtSet(ex,s)+'</span>'
+      +'<button class="del-btn" onclick="delSet('+i+')">×</button></div>';
+  }).join('');
+}
+
+function delSet(i){
+  sets.splice(i,1);
+  allSets[ei]=sets;
+  renderSets();
+}
+
+function advance(){
+  ei++;
+  if(ei>=exList.length){showDone();return;}
+  loadExercise();
+}
+
+function showDone(){
+  var html='';
+  exList.forEach(function(ex,i){
+    var s=allSets[i];
+    if(!s||!s.length)return;
+    html+='<div class="done-ex"><div class="name">'+ex.name+'</div>'
+      +'<div class="data">'+s.map(function(x){return fmtSet(ex,x);}).join(' · ')+'</div></div>';
+  });
+  document.getElementById('done-list').innerHTML=html;
+  document.getElementById('done-sub').textContent='Nice work, Marty.';
+  show('done');
+}
+
+function goHome(){show('home');}
+</script>
+</body>
+</html>
